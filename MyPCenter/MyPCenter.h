@@ -44,10 +44,16 @@ public:
 	Edge maxEdge();
 	void initSolution();
 	void createFDTable();
+	void createFDByserverNodeArr(int currNode);
+	void createFDByNoDisArr(int currNode);
+	FDTable findCountByNoDisArr(int currNode, int count);
+	void addFacility(int);
+	void removeFacility(int);
 	
 	/* print check */
 	void printGraph();
 	void printNoDisArr();
 	void printInitSol();
+	void printFDTable();
 };
 

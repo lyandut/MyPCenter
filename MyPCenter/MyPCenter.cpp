@@ -110,18 +110,134 @@ void MyPCenter::initSolution()
 
 void MyPCenter::createFDTable()
 {
+	F = D = vector<FDTable>(G.vexNum);
 	for (int i = 0; i < G.vexNum; i++) {
-		for (int j = 0; j < NoDisArr[i].size(); j++) {
-			if(serverNodeFlag[NoDisArr[i][j].nodeNo]) //第一个服务节点
-				
-		}
-		//F[i].first = NoDisArr[i][0].nodeNo;
-		//F[i].second = NoDisArr[i][1].nodeNo;
-		//D[i].first = NoDisArr[i][0].nodeDis;
-		//D[i].second = NoDisArr[i][1].nodeDis;
-		for (int j = 0; j < serverNodeArr.size(); j++) {
+		createFDByserverNodeArr(i);
+	}
+	printFDTable();
+	
+	for (int i = 0; i < G.vexNum; i++) {
+		createFDByNoDisArr(i);
+	}
+	printFDTable();
+}
 
+void MyPCenter::createFDByserverNodeArr(int i)
+{
+	/* 遍历serverNodeArr，找出距离最短的前两者 */
+	int firNode, secNode;
+	/* 三目运算符：加括号！！！*/
+	G.edges[i][serverNodeArr[0]] < G.edges[i][serverNodeArr[1]] ?
+		(firNode = serverNodeArr[0], secNode = serverNodeArr[1]) :
+		(firNode = serverNodeArr[1], secNode = serverNodeArr[0]);
+	for (int j = 2; j < serverNodeArr.size(); j++) {
+		if (G.edges[i][serverNodeArr[j]] < G.edges[i][firNode]) {
+			secNode = firNode;
+			firNode = serverNodeArr[j];
 		}
+		else if (G.edges[i][serverNodeArr[j]] < G.edges[i][secNode]) {
+			secNode = serverNodeArr[j];
+		}
+		else
+			continue;
+	}
+	F[i].first = firNode;
+	D[i].first = G.edges[i][firNode];
+	F[i].second = secNode;
+	D[i].second = G.edges[i][secNode];
+}
+
+void MyPCenter::createFDByNoDisArr(int i)
+{
+	/* 遍历已排序的NoDisArr[i]，找出前两近的服务节点 */
+	FDTable tmp1, tmp2;
+	for (int i = 0; i < G.vexNum; i++) {
+		tmp1 = findCountByNoDisArr(i, 1);
+		tmp2 = findCountByNoDisArr(i, 2);
+		F[i].first = tmp1.first;
+		D[i].first = tmp1.second;
+		F[i].second = tmp2.first;
+		D[i].second = tmp2.second;
+	}
+}
+
+FDTable MyPCenter::findCountByNoDisArr(int i, int count)
+{
+	/* 遍历已排序的NoDisArr[i]，找出第count个服务节点 */
+	/* j: 距离i第j近节点 */
+	FDTable fd(i, 0);
+	for (int j = 0; j < NoDisArr[i].size(); j++) {
+		if (serverNodeFlag[NoDisArr[i][j].nodeNo] && count == 1) {
+			fd = make_pair(NoDisArr[i][j].nodeNo, NoDisArr[i][j].nodeDis);
+			count--;
+		}
+		else if (serverNodeFlag[NoDisArr[i][j].nodeNo]) {
+			count--;
+		}
+		else if (!count)
+			break;
+		else
+			continue;
+	}
+	return fd;
+}
+
+void MyPCenter::addFacility(int newServerNode)
+{
+	//Edge maxServeEdge = maxEdge();
+	//int newServerNode = maxServeEdge.userNode.nodeNo;
+	int SC = 0;
+	serverNodeArr.push_back(newServerNode);
+	serverNodeFlag[newServerNode] = true;
+	for (int i = 0; i < G.vexNum; i++) {
+		if (G.edges[i][newServerNode] < D[i].first) {
+			D[i].second = D[i].first;
+			F[i].second = F[i].first;
+			D[i].first = G.edges[i][newServerNode];
+			F[i].first = newServerNode;
+		}
+		else if (G.edges[i][newServerNode] < D[i].second) {
+			D[i].second = G.edges[i][newServerNode];
+			F[i].second = newServerNode;
+		}
+		else 
+			continue;
+		
+		if (D[i].first > SC)
+			SC = D[i].first;
+	}
+}
+
+void MyPCenter::removeFacility(int rmServerNode)
+{
+	int SC = 0;
+	vector<int>::iterator iter = serverNodeArr.begin();
+	while (iter != serverNodeArr.end())
+		if (*iter == rmServerNode) {
+			iter = serverNodeArr.erase(iter);
+			break;
+		}
+	serverNodeFlag[rmServerNode] = false;
+	for (int i = 0; i < G.vexNum; i++) {
+		if (F[i].first == rmServerNode) {
+			D[i].first = D[i].second;
+			F[i].first = F[i].second;
+			// find_next
+			FDTable tmp = findCountByNoDisArr(i, 3);
+			D[i].second = tmp.second;
+			F[i].second = tmp.first;
+		}
+		else if (F[i].second == rmServerNode) {
+			// find_next
+			FDTable tmp = findCountByNoDisArr(i, 3);
+			D[i].second = tmp.second;
+			F[i].second = tmp.first;
+		}
+		else
+			continue;
+		
+		if (D[i].first > SC)
+			SC = D[i].first;
 	}
 }
 
@@ -154,15 +270,25 @@ void MyPCenter::printNoDisArr()
 
 void MyPCenter::printInitSol()
 {
-	vector<int>::iterator iter = serverNodeArr.begin();
-	while (iter != serverNodeArr.end()) {
-		cout << *iter << endl;
-		++iter;
-	}
+	//vector<int>::iterator iter = serverNodeArr.begin();
+	//while (iter != serverNodeArr.end()) {
+	//	cout << *iter << '\t';
+	//	++iter;
+	//}
+	//cout << endl;
 	
-	for (int i = 0; i < serverNodeFlag.size(); i++) {
+	for (int i = 0; i < serverNodeFlag.size(); i++)
 		if (serverNodeFlag[i])
-			cout << i << endl;
+			cout << i << '\t';
+	cout << endl;
+}
+
+void MyPCenter::printFDTable()
+{
+	cout << "****** F&D Table ******" << endl;
+	cout << "No\tF[f]\tF[s]\tD[f]\tD[s]" << endl;
+	for (int i = 0; i < G.vexNum; i++) {
+		cout << i << '\t' << F[i].first << '\t' << F[i].second << '\t' << D[i].first << '\t' << D[i].second << endl;
 	}
 }
 
