@@ -114,12 +114,12 @@ void MyPCenter::createFDTable()
 	for (int i = 0; i < G.vexNum; i++) {
 		createFDByserverNodeArr(i);
 	}
-	printFDTable();
+	//printFDTable();
 	
-	for (int i = 0; i < G.vexNum; i++) {
-		createFDByNoDisArr(i);
-	}
-	printFDTable();
+	//for (int i = 0; i < G.vexNum; i++) {
+	//	createFDByNoDisArr(i);
+	//}
+	//printFDTable();
 }
 
 void MyPCenter::createFDByserverNodeArr(int i)
@@ -184,8 +184,6 @@ FDTable MyPCenter::findCountByNoDisArr(int i, int count)
 
 void MyPCenter::addFacility(int newServerNode)
 {
-	//Edge maxServeEdge = maxEdge();
-	//int newServerNode = maxServeEdge.userNode.nodeNo;
 	int SC = 0;
 	serverNodeArr.push_back(newServerNode);
 	serverNodeFlag[newServerNode] = true;
@@ -212,24 +210,26 @@ void MyPCenter::removeFacility(int rmServerNode)
 {
 	int SC = 0;
 	vector<int>::iterator iter = serverNodeArr.begin();
-	while (iter != serverNodeArr.end())
+	while (iter != serverNodeArr.end()) {
 		if (*iter == rmServerNode) {
 			iter = serverNodeArr.erase(iter);
 			break;
 		}
+		++iter;
+	}
 	serverNodeFlag[rmServerNode] = false;
 	for (int i = 0; i < G.vexNum; i++) {
 		if (F[i].first == rmServerNode) {
 			D[i].first = D[i].second;
 			F[i].first = F[i].second;
 			// find_next
-			FDTable tmp = findCountByNoDisArr(i, 3);
+			FDTable tmp = findCountByNoDisArr(i, 2);
 			D[i].second = tmp.second;
 			F[i].second = tmp.first;
 		}
 		else if (F[i].second == rmServerNode) {
 			// find_next
-			FDTable tmp = findCountByNoDisArr(i, 3);
+			FDTable tmp = findCountByNoDisArr(i, 2);
 			D[i].second = tmp.second;
 			F[i].second = tmp.first;
 		}
@@ -238,6 +238,73 @@ void MyPCenter::removeFacility(int rmServerNode)
 		
 		if (D[i].first > SC)
 			SC = D[i].first;
+	}
+}
+
+Edge MyPCenter::findPair(Edge maxServeEdge)
+{
+	int maxServerNode = maxServeEdge.serverNode;
+	int maxUserNode = maxServeEdge.userNode.nodeNo;
+	int maxDistance = maxServeEdge.userNode.nodeDis;
+	vector<int> candNewNodes;
+	vector<NodeNoDis>::iterator iter = NoDisArr[maxUserNode].begin();
+	while (iter != NoDisArr[maxUserNode].end() && !serverNodeFlag[(*iter).nodeNo]) {
+		candNewNodes.push_back((*iter).nodeNo);
+		++iter;
+	}
+	/* 探测每一个新增候选解（用于交换的用户节点） */
+	Edge pairEdge;
+	for (int i = 0; i < candNewNodes.size(); i++) {
+		int newPNode = candNewNodes[i];
+		addFacility(newPNode);
+		/* 对每一个新增候选解求M */
+		map<int, int> M;
+		for (int j = 0; j < serverNodeArr.size(); j++)
+			M[serverNodeArr[j]] = 0;
+		for (int j = 0; j < G.vexNum; j++)
+			if (M.at(F[j].first) < min(G.edges[newPNode][j], D[j].second))
+				M[F[j].first] = min(G.edges[newPNode][j], D[j].second);
+		/* 比较M与maxDistance，确定用于交换的服务节点和新的目标函数值 */
+		for (int j = 0; j < serverNodeArr.size(); j++)
+			if (M.at(serverNodeArr[j]) <= maxDistance) {
+				maxDistance = M.at(serverNodeArr[j]);
+				pairEdge.serverNode = serverNodeArr[j];
+				pairEdge.userNode.nodeNo = newPNode;
+				pairEdge.userNode.nodeDis = G.edges[serverNodeArr[j]][newPNode];
+			}
+		removeFacility(newPNode);
+	}
+	return pairEdge;
+}
+
+void MyPCenter::singleTabuSearch(int optSol, int stopCondition)
+{
+	int singleIter = 10 + rand() % 10;
+	Edge maxServeEdge = maxEdge();
+	while (maxServeEdge.userNode.nodeDis != optSol && singleIter != stopCondition)
+	{	
+		hisOptSol.push_back(maxServeEdge.userNode.nodeDis);
+		Edge findPairEdge = findPair(maxServeEdge);
+		addFacility(findPairEdge.userNode.nodeNo);
+		removeFacility(findPairEdge.serverNode);
+		maxServeEdge = maxEdge();
+	}
+}
+
+void MyPCenter::doubleTabuSearch(int optSol, int alphaCondition, int bateCondition)
+{
+	int iter = 10 + rand() % 10;
+	int alphaIter = iter + pCenterNum / 10 + rand() % 10;
+	int bateIter = iter + (G.vexNum - pCenterNum) / 10 + rand() % 100;
+	Edge maxServeEdge = maxEdge();
+	while (maxServeEdge.userNode.nodeDis != optSol && 
+		(alphaIter != alphaCondition || bateIter != bateCondition)
+		) {
+		hisOptSol.push_back(maxServeEdge.userNode.nodeDis);
+		Edge findPairEdge = findPair(maxServeEdge);
+		addFacility(findPairEdge.userNode.nodeNo);
+		removeFacility(findPairEdge.serverNode);
+		maxServeEdge = maxEdge();
 	}
 }
 

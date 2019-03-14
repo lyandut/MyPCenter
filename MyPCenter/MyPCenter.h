@@ -4,6 +4,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <vector>
+#include <map>
 #include <string>
 
 using namespace std;
@@ -39,7 +40,10 @@ public:
 	vector<int> serverNodeArr;
 	vector<bool> serverNodeFlag;
 	vector<FDTable> F, D;
-
+	vector<Edge> singleTabuTable;
+	vector<vector<int>> doubleTabuTable;
+	vector<int> hisOptSol;
+ 
 	void readFileToCreateGraph(string fileName);
 	Edge maxEdge();
 	void initSolution();
@@ -49,6 +53,9 @@ public:
 	FDTable findCountByNoDisArr(int currNode, int count);
 	void addFacility(int);
 	void removeFacility(int);
+	Edge findPair(Edge maxServeEdge);
+	void singleTabuSearch(int optSol, int stopCondition);
+	void doubleTabuSearch(int optSol, int alphaCondition, int bateCondition);
 	
 	/* print check */
 	void printGraph();
