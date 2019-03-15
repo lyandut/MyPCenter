@@ -11,6 +11,7 @@ int main() {
 	myPC.readFileToCreateGraph("D:\\Hust\\P-Center\\TabuSearch_For_P-center\\Instance\\pmed1.txt");
 	myPC.initSolution();
 	myPC.createFDTable();
+	myPC.singleTabuSearch(127, 5);
 
 	//myPC.printGraph();
 	//myPC.printNoDisArr();

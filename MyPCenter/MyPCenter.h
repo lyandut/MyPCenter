@@ -1,5 +1,8 @@
 #pragma once
 #define UNREACHABLE INT_MAX
+#define SINGLETABUTENURE 10 + rand() % 10
+#define ALPHATABUTENURE doubleIter + pCenterNum / 10 + rand() % 10
+#define BETATABUTENURE doubleIter + (G.vexNum - pCenterNum) / 10 + rand() % 100
 
 #include <iostream>
 #include <cstdlib>
@@ -15,9 +18,12 @@ typedef struct {
 	int nodeDis;
 }NodeNoDis;
 
-typedef struct {
+typedef struct EdgeTag{
 	int serverNode;
 	NodeNoDis userNode;
+	bool operator < (const EdgeTag &test) const {
+		return userNode.nodeDis < test.userNode.nodeDis;
+	}
 }Edge;
 
 typedef struct {
@@ -40,8 +46,9 @@ public:
 	vector<int> serverNodeArr;
 	vector<bool> serverNodeFlag;
 	vector<FDTable> F, D;
-	vector<Edge> singleTabuTable;
-	vector<vector<int>> doubleTabuTable;
+	map<Edge, int> singleTabuTable;
+	vector<int> alphaTabuTable;
+	vector<int> betaTabuTable;
 	vector<int> hisOptSol;
  
 	void readFileToCreateGraph(string fileName);
@@ -55,8 +62,10 @@ public:
 	void removeFacility(int);
 	Edge findPair(Edge maxServeEdge);
 	void singleTabuSearch(int optSol, int stopCondition);
-	void doubleTabuSearch(int optSol, int alphaCondition, int bateCondition);
-	
+	void doubleTabuSearch(int optSol, int alphaCondition, int betaCondition);
+	bool isAmnesty(Edge feaEdge);
+
+
 	/* print check */
 	void printGraph();
 	void printNoDisArr();

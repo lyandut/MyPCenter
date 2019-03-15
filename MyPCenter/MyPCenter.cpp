@@ -270,42 +270,100 @@ Edge MyPCenter::findPair(Edge maxServeEdge)
 				maxDistance = M.at(serverNodeArr[j]);
 				pairEdge.serverNode = serverNodeArr[j];
 				pairEdge.userNode.nodeNo = newPNode;
-				pairEdge.userNode.nodeDis = G.edges[serverNodeArr[j]][newPNode];
+				pairEdge.userNode.nodeDis = maxDistance;
 			}
 		removeFacility(newPNode);
 	}
 	return pairEdge;
 }
 
-void MyPCenter::singleTabuSearch(int optSol, int stopCondition)
+void MyPCenter::singleTabuSearch(int optSol, int stopCondition)	/* stopCondition: 最大迭代次数 */
 {
-	int singleIter = 10 + rand() % 10;
+	int singleIter = 0;	/* 迭代次数 */
 	Edge maxServeEdge = maxEdge();
-	while (maxServeEdge.userNode.nodeDis != optSol && singleIter != stopCondition)
-	{	
+	while (maxServeEdge.userNode.nodeDis != optSol && singleIter < stopCondition)
+	{
+		cout << maxServeEdge.userNode.nodeDis << " "
+			<< maxServeEdge.serverNode << " "
+			<< maxServeEdge.userNode.nodeNo << " "
+			<< endl;
+
 		hisOptSol.push_back(maxServeEdge.userNode.nodeDis);
 		Edge findPairEdge = findPair(maxServeEdge);
-		addFacility(findPairEdge.userNode.nodeNo);
-		removeFacility(findPairEdge.serverNode);
+		if (singleTabuTable.count(findPairEdge)) { /* 已禁忌 */
+			if (singleTabuTable.at(findPairEdge) < singleIter) { /* 禁忌周期结束 */
+				addFacility(findPairEdge.userNode.nodeNo);
+				removeFacility(findPairEdge.serverNode);
+			}
+			else {  /* 禁忌周期内 */
+				if (isAmnesty(findPairEdge))
+					singleTabuTable.erase(findPairEdge);  /* 特赦解禁 */
+				else {
+					addFacility(findPairEdge.serverNode);
+					removeFacility(findPairEdge.userNode.nodeNo);
+				}
+			}
+		}
+		else { /* 未禁忌 */
+			singleTabuTable[findPairEdge] = SINGLETABUTENURE;
+			addFacility(findPairEdge.userNode.nodeNo);
+			removeFacility(findPairEdge.serverNode);	
+		}
 		maxServeEdge = maxEdge();
+		singleIter++;
 	}
 }
 
-void MyPCenter::doubleTabuSearch(int optSol, int alphaCondition, int bateCondition)
+void MyPCenter::doubleTabuSearch(int optSol, int alphaCondition, int betaCondition)
 {
-	int iter = 10 + rand() % 10;
-	int alphaIter = iter + pCenterNum / 10 + rand() % 10;
-	int bateIter = iter + (G.vexNum - pCenterNum) / 10 + rand() % 100;
+	int doubleIter = 0;	/* 迭代次数 */
+	int alphaIter = ALPHATABUTENURE;
+	int betaIter = BETATABUTENURE;
 	Edge maxServeEdge = maxEdge();
 	while (maxServeEdge.userNode.nodeDis != optSol && 
-		(alphaIter != alphaCondition || bateIter != bateCondition)
+		(alphaIter != alphaCondition || betaIter != betaCondition)
 		) {
 		hisOptSol.push_back(maxServeEdge.userNode.nodeDis);
 		Edge findPairEdge = findPair(maxServeEdge);
-		addFacility(findPairEdge.userNode.nodeNo);
-		removeFacility(findPairEdge.serverNode);
+		
+		if (singleTabuTable.count(findPairEdge)) { /* 已禁忌 */
+			if (singleTabuTable.at(findPairEdge) < singleIter) { /* 禁忌周期结束 */
+				addFacility(findPairEdge.userNode.nodeNo);
+				removeFacility(findPairEdge.serverNode);
+			}
+			else {  /* 禁忌周期内 */
+				if (isAmnesty(findPairEdge))
+					singleTabuTable.erase(findPairEdge);  /* 特赦解禁 */
+				else {
+					addFacility(findPairEdge.serverNode);
+					removeFacility(findPairEdge.userNode.nodeNo);
+				}
+			}
+		}
+
+
+
+
+		else { /* 未禁忌 */
+			singleTabuTable[findPairEdge] = SINGLETABUTENURE;
+			addFacility(findPairEdge.userNode.nodeNo);
+			removeFacility(findPairEdge.serverNode);
+		}
+		
 		maxServeEdge = maxEdge();
+		doubleIter++;
 	}
+}
+
+bool MyPCenter::isAmnesty(Edge feaEdge)
+{
+	/* 特赦规则 */
+	sort(hisOptSol.begin(), hisOptSol.end());
+	int bestHisSol = hisOptSol[0];
+	addFacility(feaEdge.userNode.nodeNo);
+	removeFacility(feaEdge.serverNode);
+	int feaSol = maxEdge().userNode.nodeDis;
+	return feaSol <= bestHisSol;
 }
 
 void MyPCenter::printGraph() {
