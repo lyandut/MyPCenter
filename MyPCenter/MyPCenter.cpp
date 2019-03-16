@@ -1,11 +1,9 @@
 #include "MyPCenter.h"
-#include <ctime>
 #include <fstream>
 #include <algorithm>
 
 MyPCenter::MyPCenter()
 {
-	srand(time(NULL));
 }
 
 
@@ -89,10 +87,6 @@ void MyPCenter::initSolution()
 	{
 		Edge maxServeEdge = maxEdge();
 		NodeNoDis userNode = maxServeEdge.userNode;
-		//cout << "maxServeEdge: "
-		//	<< maxServeEdge.serverNode << "->" << maxServeEdge.userNode.nodeNo
-		//	<< ": " << maxServeEdge.userNode.nodeDis << endl;
-		
 		vector<int> candNodes;
 		for (vector<NodeNoDis>::iterator iter = NoDisArr[userNode.nodeNo].begin();
 			iter != NoDisArr[userNode.nodeNo].end(); ++iter)
@@ -182,7 +176,7 @@ FDTable MyPCenter::findCountByNoDisArr(int i, int count)
 	return fd;
 }
 
-void MyPCenter::addFacility(int newServerNode)
+int MyPCenter::addFacility(int newServerNode)
 {
 	int SC = 0;
 	serverNodeArr.push_back(newServerNode);
@@ -204,9 +198,10 @@ void MyPCenter::addFacility(int newServerNode)
 		if (D[i].first > SC)
 			SC = D[i].first;
 	}
+	return SC;
 }
 
-void MyPCenter::removeFacility(int rmServerNode)
+int MyPCenter::removeFacility(int rmServerNode)
 {
 	int SC = 0;
 	vector<int>::iterator iter = serverNodeArr.begin();
@@ -239,10 +234,12 @@ void MyPCenter::removeFacility(int rmServerNode)
 		if (D[i].first > SC)
 			SC = D[i].first;
 	}
+	return SC;
 }
 
-Edge MyPCenter::findPair(Edge maxServeEdge)
+Edge MyPCenter::findPair(int tabuIter)
 {
+	Edge maxServeEdge = maxEdge();
 	int maxServerNode = maxServeEdge.serverNode;
 	int maxUserNode = maxServeEdge.userNode.nodeNo;
 	int maxDistance = maxServeEdge.userNode.nodeDis;
@@ -252,29 +249,76 @@ Edge MyPCenter::findPair(Edge maxServeEdge)
 		candNewNodes.push_back((*iter).nodeNo);
 		++iter;
 	}
-	/* 探测每一个新增候选解（用于交换的用户节点） */
-	Edge pairEdge;
+	/* 探测可升级为服务节点的用户节点集合 candNewNodes */
+	vector<Edge> L;
+	vector<Edge> tabuL;
 	for (int i = 0; i < candNewNodes.size(); i++) {
 		int newPNode = candNewNodes[i];
 		addFacility(newPNode);
-		/* 对每一个新增候选解求M */
+		/* 对每一个服务节点求M */
 		map<int, int> M;
-		for (int j = 0; j < serverNodeArr.size(); j++)
+		for (int j = 0; j < serverNodeArr.size(); j++) {
 			M[serverNodeArr[j]] = 0;
-		for (int j = 0; j < G.vexNum; j++)
+		}
+		for (int j = 0; j < G.vexNum; j++) {
 			if (M.at(F[j].first) < min(G.edges[newPNode][j], D[j].second))
 				M[F[j].first] = min(G.edges[newPNode][j], D[j].second);
+		}
 		/* 比较M与maxDistance，确定用于交换的服务节点和新的目标函数值 */
-		for (int j = 0; j < serverNodeArr.size(); j++)
-			if (M.at(serverNodeArr[j]) <= maxDistance) {
-				maxDistance = M.at(serverNodeArr[j]);
-				pairEdge.serverNode = serverNodeArr[j];
-				pairEdge.userNode.nodeNo = newPNode;
-				pairEdge.userNode.nodeDis = maxDistance;
+		int nodeToAdd = newPNode;
+		vector<int>::iterator iter = serverNodeArr.begin();
+		while (iter != serverNodeArr.end() && (*iter)!= nodeToAdd) {
+			int nodeToDel = *iter;
+			if (alphaTabuTable[nodeToDel] <= tabuIter || betaTabuTable[nodeToAdd] <= tabuIter) {  /* 非禁忌状态 */
+				if (M.at(nodeToDel) == maxDistance) {
+					Edge pairEdge = { nodeToDel,{ nodeToAdd, G.edges[nodeToDel][nodeToAdd] } };
+					L.push_back(pairEdge);
+				}
+				else if (M.at(nodeToDel) < maxDistance) {
+					maxDistance = M.at(nodeToDel);
+					L.clear();
+					Edge pairEdge = { nodeToDel,{ nodeToAdd, G.edges[nodeToDel][nodeToAdd] } };
+					L.push_back(pairEdge);
+				}
 			}
+			else { /* 禁忌状态 */
+				if (M.at(nodeToDel) == maxDistance) {
+					Edge pairEdge = { nodeToDel,{ nodeToAdd, G.edges[nodeToDel][nodeToAdd] } };
+					tabuL.push_back(pairEdge);
+				}
+				else if (M.at(nodeToDel) < maxDistance) {
+					maxDistance = M.at(nodeToDel);
+					tabuL.clear();
+					Edge pairEdge = { nodeToDel,{ nodeToAdd, G.edges[nodeToDel][nodeToAdd] } };
+					tabuL.push_back(pairEdge);
+				}
+			}
+			++iter;
+		}
 		removeFacility(newPNode);
 	}
-	return pairEdge;
+
+	/* 从可交换对中随机返回一对 */
+	if (tabuL.size())
+		return tabuL[rand() % tabuL.size()];
+	else
+		return L[rand() % L.size()];
+}
+
+void MyPCenter::doubleTabuSearch(int optSol, int stopCondition)
+{
+	int doubleIter = 0;	/* 迭代次数 */
+	int maxServeEdge = maxEdge().userNode.nodeDis;
+	while (maxServeEdge != optSol && doubleIter != stopCondition) {
+		cout << doubleIter << ": " << maxServeEdge << endl;
+		hisOptSol.push_back(maxServeEdge);
+		Edge findPairEdge = findPair(doubleIter);
+		addFacility(findPairEdge.userNode.nodeNo);
+		maxServeEdge = removeFacility(findPairEdge.serverNode);
+		alphaTabuTable[findPairEdge.userNode.nodeNo] = ALPHATABUTENURE;
+		betaTabuTable[findPairEdge.serverNode] = BETATABUTENURE;
+		doubleIter++;
+	}
 }
 
 void MyPCenter::singleTabuSearch(int optSol, int stopCondition)	/* stopCondition: 最大迭代次数 */
@@ -283,13 +327,8 @@ void MyPCenter::singleTabuSearch(int optSol, int stopCondition)	/* stopCondition
 	Edge maxServeEdge = maxEdge();
 	while (maxServeEdge.userNode.nodeDis != optSol && singleIter < stopCondition)
 	{
-		cout << maxServeEdge.userNode.nodeDis << " "
-			<< maxServeEdge.serverNode << " "
-			<< maxServeEdge.userNode.nodeNo << " "
-			<< endl;
-
 		hisOptSol.push_back(maxServeEdge.userNode.nodeDis);
-		Edge findPairEdge = findPair(maxServeEdge);
+		Edge findPairEdge = findPair(singleIter);
 		if (singleTabuTable.count(findPairEdge)) { /* 已禁忌 */
 			if (singleTabuTable.at(findPairEdge) < singleIter) { /* 禁忌周期结束 */
 				addFacility(findPairEdge.userNode.nodeNo);
@@ -304,54 +343,13 @@ void MyPCenter::singleTabuSearch(int optSol, int stopCondition)	/* stopCondition
 				}
 			}
 		}
-		else { /* 未禁忌 */
-			singleTabuTable[findPairEdge] = SINGLETABUTENURE;
-			addFacility(findPairEdge.userNode.nodeNo);
-			removeFacility(findPairEdge.serverNode);	
-		}
-		maxServeEdge = maxEdge();
-		singleIter++;
-	}
-}
-
-void MyPCenter::doubleTabuSearch(int optSol, int alphaCondition, int betaCondition)
-{
-	int doubleIter = 0;	/* 迭代次数 */
-	int alphaIter = ALPHATABUTENURE;
-	int betaIter = BETATABUTENURE;
-	Edge maxServeEdge = maxEdge();
-	while (maxServeEdge.userNode.nodeDis != optSol && 
-		(alphaIter != alphaCondition || betaIter != betaCondition)
-		) {
-		hisOptSol.push_back(maxServeEdge.userNode.nodeDis);
-		Edge findPairEdge = findPair(maxServeEdge);
-		
-		if (singleTabuTable.count(findPairEdge)) { /* 已禁忌 */
-			if (singleTabuTable.at(findPairEdge) < singleIter) { /* 禁忌周期结束 */
-				addFacility(findPairEdge.userNode.nodeNo);
-				removeFacility(findPairEdge.serverNode);
-			}
-			else {  /* 禁忌周期内 */
-				if (isAmnesty(findPairEdge))
-					singleTabuTable.erase(findPairEdge);  /* 特赦解禁 */
-				else {
-					addFacility(findPairEdge.serverNode);
-					removeFacility(findPairEdge.userNode.nodeNo);
-				}
-			}
-		}
-
-
-
-
 		else { /* 未禁忌 */
 			singleTabuTable[findPairEdge] = SINGLETABUTENURE;
 			addFacility(findPairEdge.userNode.nodeNo);
 			removeFacility(findPairEdge.serverNode);
 		}
-		
 		maxServeEdge = maxEdge();
-		doubleIter++;
+		singleIter++;
 	}
 }
 
@@ -365,6 +363,7 @@ bool MyPCenter::isAmnesty(Edge feaEdge)
 	int feaSol = maxEdge().userNode.nodeDis;
 	return feaSol <= bestHisSol;
 }
+
 
 void MyPCenter::printGraph() {
 	cout << "[vexNum]: " << G.vexNum << endl;
