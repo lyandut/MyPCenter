@@ -250,8 +250,8 @@ Edge MyPCenter::findPair(int tabuIter)
 		++iter;
 	}
 	/* 探测可升级为服务节点的用户节点集合 candNewNodes */
-	vector<Edge> L;
-	vector<Edge> tabuL;
+	vector<Edge> L;			/* 非禁忌对 */
+	vector<Edge> tabuL;		/* 禁忌对 */
 	for (int i = 0; i < candNewNodes.size(); i++) {
 		int newPNode = candNewNodes[i];
 		addFacility(newPNode);
@@ -269,27 +269,27 @@ Edge MyPCenter::findPair(int tabuIter)
 		vector<int>::iterator iter = serverNodeArr.begin();
 		while (iter != serverNodeArr.end() && (*iter)!= nodeToAdd) {
 			int nodeToDel = *iter;
-			if (alphaTabuTable[nodeToDel] <= tabuIter || betaTabuTable[nodeToAdd] <= tabuIter) {  /* 非禁忌状态 */
+			if (alphaTabuTable[nodeToDel] <= tabuIter && betaTabuTable[nodeToAdd] <= tabuIter) {  /* 非禁忌状态 */
 				if (M.at(nodeToDel) == maxDistance) {
-					Edge pairEdge = { nodeToDel,{ nodeToAdd, G.edges[nodeToDel][nodeToAdd] } };
+					Edge pairEdge = { nodeToDel,{ nodeToAdd, maxDistance } };
 					L.push_back(pairEdge);
 				}
 				else if (M.at(nodeToDel) < maxDistance) {
 					maxDistance = M.at(nodeToDel);
 					L.clear();
-					Edge pairEdge = { nodeToDel,{ nodeToAdd, G.edges[nodeToDel][nodeToAdd] } };
+					Edge pairEdge = { nodeToDel,{ nodeToAdd, maxDistance } };
 					L.push_back(pairEdge);
 				}
 			}
 			else { /* 禁忌状态 */
 				if (M.at(nodeToDel) == maxDistance) {
-					Edge pairEdge = { nodeToDel,{ nodeToAdd, G.edges[nodeToDel][nodeToAdd] } };
+					Edge pairEdge = { nodeToDel,{ nodeToAdd, maxDistance } };
 					tabuL.push_back(pairEdge);
 				}
 				else if (M.at(nodeToDel) < maxDistance) {
 					maxDistance = M.at(nodeToDel);
 					tabuL.clear();
-					Edge pairEdge = { nodeToDel,{ nodeToAdd, G.edges[nodeToDel][nodeToAdd] } };
+					Edge pairEdge = { nodeToDel,{ nodeToAdd, maxDistance } };
 					tabuL.push_back(pairEdge);
 				}
 			}
@@ -298,9 +298,10 @@ Edge MyPCenter::findPair(int tabuIter)
 		removeFacility(newPNode);
 	}
 
-	/* 从可交换对中随机返回一对 */
+	/* 从可交换对中返回最好的一对 */
 	if (tabuL.size())
-		return tabuL[rand() % tabuL.size()];
+		if (isAmnesty(tabuL[rand() % tabuL.size()]))
+			return tabuL[rand() % tabuL.size()];
 	else
 		return L[rand() % L.size()];
 }
@@ -358,10 +359,7 @@ bool MyPCenter::isAmnesty(Edge feaEdge)
 	/* 特赦规则 */
 	sort(hisOptSol.begin(), hisOptSol.end());
 	int bestHisSol = hisOptSol[0];
-	addFacility(feaEdge.userNode.nodeNo);
-	removeFacility(feaEdge.serverNode);
-	int feaSol = maxEdge().userNode.nodeDis;
-	return feaSol <= bestHisSol;
+	return feaEdge.userNode.nodeDis <= bestHisSol;
 }
 
 
