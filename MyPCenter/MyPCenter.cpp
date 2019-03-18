@@ -59,38 +59,48 @@ void MyPCenter::readFileToCreateGraph(string fileName) {
 /* search the MaxServeEdge globally */
 Edge MyPCenter::maxEdge()
 {
-	Edge maxServeEdge;
-	int maxEdge = 0;
-	for (int i = 0; i < serverNodeArr.size(); ++i) {
-		int serverNode = serverNodeArr[i];
-		vector<NodeNoDis>::reverse_iterator r_iter = NoDisArr[serverNode].rbegin();
-		while (r_iter != NoDisArr[serverNode].rend()) {
-			if (!serverNodeFlag[(*r_iter).nodeNo] && (*r_iter).nodeDis >= maxEdge) {
-				maxEdge = (*r_iter).nodeDis;
-				maxServeEdge.serverNode = serverNode;
-				maxServeEdge.userNode = (*r_iter);
-			}
-			++r_iter;
+	int serverNode, userNode;
+	int SC = 0;
+	for (int i = 0; i < G.vexNum; i++) {
+		if (D[i].first > SC) {
+			SC = D[i].first;
+			serverNode = F[i].first;
+			userNode = i;
 		}
 	}
+	Edge maxServeEdge = { serverNode, {userNode, SC} };
 	return maxServeEdge;
 }
 
+Edge MyPCenter::maxEdgeWithoutFD()
+{
+	int serverNode, userNode;
+	int SC = 0;
+	for (int i = 0; i < G.vexNum; i++) {
+		FDTable tmp = findCountByNoDisArr(i, 1);
+		if (tmp.second > SC) {
+			userNode = i;
+			serverNode = tmp.first;
+			SC = tmp.second;
+		}
+	}
+	Edge maxServeEdge = { serverNode,{ userNode, SC } };
+	return maxServeEdge;
+}
+ 
 void MyPCenter::initSolution()
 {
-	serverNodeFlag = vector<bool>(G.vexNum, false);
+	serverNodeFlag = vector<int>(G.vexNum, 0);
 	int initPNode = rand() % G.vexNum;
 	serverNodeArr.push_back(initPNode);
-	serverNodeFlag[initPNode] = true;
+	serverNodeFlag[initPNode] = 1;
 	
 	while (serverNodeArr.size() < pCenterNum)
 	{
-		Edge maxServeEdge = maxEdge();
+		Edge maxServeEdge = maxEdgeWithoutFD();
 		NodeNoDis userNode = maxServeEdge.userNode;
 		vector<int> candNodes;
-		for (vector<NodeNoDis>::iterator iter = NoDisArr[userNode.nodeNo].begin();
-			iter != NoDisArr[userNode.nodeNo].end(); ++iter)
-		{
+		for (vector<NodeNoDis>::iterator iter = NoDisArr[userNode.nodeNo].begin(); iter != NoDisArr[userNode.nodeNo].end(); ++iter){
 			if (!serverNodeFlag[(*iter).nodeNo])
 				candNodes.push_back((*iter).nodeNo);
 			else
@@ -98,7 +108,7 @@ void MyPCenter::initSolution()
 		}
 		int newPNode = candNodes[rand() % candNodes.size()];
 		serverNodeArr.push_back(newPNode);
-		serverNodeFlag[newPNode] = true;
+		serverNodeFlag[newPNode] = 1;
 	}
 }
 
@@ -109,7 +119,7 @@ void MyPCenter::createFDTable()
 		createFDByserverNodeArr(i);
 	}
 	//printFDTable();
-	
+	//
 	//for (int i = 0; i < G.vexNum; i++) {
 	//	createFDByNoDisArr(i);
 	//}
@@ -132,8 +142,6 @@ void MyPCenter::createFDByserverNodeArr(int i)
 		else if (G.edges[i][serverNodeArr[j]] < G.edges[i][secNode]) {
 			secNode = serverNodeArr[j];
 		}
-		else
-			continue;
 	}
 	F[i].first = firNode;
 	D[i].first = G.edges[i][firNode];
@@ -165,13 +173,11 @@ FDTable MyPCenter::findCountByNoDisArr(int i, int count)
 			fd = make_pair(NoDisArr[i][j].nodeNo, NoDisArr[i][j].nodeDis);
 			count--;
 		}
-		else if (serverNodeFlag[NoDisArr[i][j].nodeNo]) {
+		else if (serverNodeFlag[NoDisArr[i][j].nodeNo] && count > 1) {
 			count--;
 		}
 		else if (!count)
 			break;
-		else
-			continue;
 	}
 	return fd;
 }
@@ -180,7 +186,7 @@ int MyPCenter::addFacility(int newServerNode)
 {
 	int SC = 0;
 	serverNodeArr.push_back(newServerNode);
-	serverNodeFlag[newServerNode] = true;
+	serverNodeFlag[newServerNode] = 1;
 	for (int i = 0; i < G.vexNum; i++) {
 		if (G.edges[i][newServerNode] < D[i].first) {
 			D[i].second = D[i].first;
@@ -192,8 +198,6 @@ int MyPCenter::addFacility(int newServerNode)
 			D[i].second = G.edges[i][newServerNode];
 			F[i].second = newServerNode;
 		}
-		else 
-			continue;
 		
 		if (D[i].first > SC)
 			SC = D[i].first;
@@ -212,7 +216,7 @@ int MyPCenter::removeFacility(int rmServerNode)
 		}
 		++iter;
 	}
-	serverNodeFlag[rmServerNode] = false;
+	serverNodeFlag[rmServerNode] = 0;
 	for (int i = 0; i < G.vexNum; i++) {
 		if (F[i].first == rmServerNode) {
 			D[i].first = D[i].second;
@@ -228,8 +232,6 @@ int MyPCenter::removeFacility(int rmServerNode)
 			D[i].second = tmp.second;
 			F[i].second = tmp.first;
 		}
-		else
-			continue;
 		
 		if (D[i].first > SC)
 			SC = D[i].first;
@@ -253,55 +255,54 @@ Edge MyPCenter::findPair(int tabuIter)
 	vector<Edge> L;			/* 非禁忌对 */
 	vector<Edge> tabuL;		/* 禁忌对 */
 	for (int i = 0; i < candNewNodes.size(); i++) {
-		int newPNode = candNewNodes[i];
-		addFacility(newPNode);
+		int nodeToAdd = candNewNodes[i];
+		addFacility(nodeToAdd);
 		/* 对每一个服务节点求M */
 		map<int, int> M;
 		for (int j = 0; j < serverNodeArr.size(); j++) {
 			M[serverNodeArr[j]] = 0;
 		}
 		for (int j = 0; j < G.vexNum; j++) {
-			if (M.at(F[j].first) < min(G.edges[newPNode][j], D[j].second))
-				M[F[j].first] = min(G.edges[newPNode][j], D[j].second);
+			if (M[F[j].first] < min(G.edges[nodeToAdd][j], D[j].second))
+				M[F[j].first] = min(G.edges[nodeToAdd][j], D[j].second);
 		}
 		/* 比较M与maxDistance，确定用于交换的服务节点和新的目标函数值 */
-		int nodeToAdd = newPNode;
 		vector<int>::iterator iter = serverNodeArr.begin();
 		while (iter != serverNodeArr.end() && (*iter)!= nodeToAdd) {
 			int nodeToDel = *iter;
-			if (alphaTabuTable[nodeToDel] <= tabuIter && betaTabuTable[nodeToAdd] <= tabuIter) {  /* 非禁忌状态 */
-				if (M.at(nodeToDel) == maxDistance) {
-					Edge pairEdge = { nodeToDel,{ nodeToAdd, maxDistance } };
+			int tempMax = max(maxDistance, M[nodeToDel]);
+			if (alphaTabuTable[nodeToAdd] < tabuIter || betaTabuTable[nodeToDel] < tabuIter) {  /* 非禁忌状态 */
+				if (tempMax >= maxDistance) {
+					Edge pairEdge = { nodeToDel,{ nodeToAdd, tempMax } };
 					L.push_back(pairEdge);
 				}
-				else if (M.at(nodeToDel) < maxDistance) {
-					maxDistance = M.at(nodeToDel);
+				else if (tempMax < maxDistance) {
+					maxDistance = tempMax;
 					L.clear();
-					Edge pairEdge = { nodeToDel,{ nodeToAdd, maxDistance } };
+					Edge pairEdge = { nodeToDel,{ nodeToAdd, tempMax } };
 					L.push_back(pairEdge);
 				}
 			}
 			else { /* 禁忌状态 */
-				if (M.at(nodeToDel) == maxDistance) {
-					Edge pairEdge = { nodeToDel,{ nodeToAdd, maxDistance } };
+				if (tempMax >= maxDistance) {
+					Edge pairEdge = { nodeToDel,{ nodeToAdd, tempMax } };
 					tabuL.push_back(pairEdge);
 				}
-				else if (M.at(nodeToDel) < maxDistance) {
-					maxDistance = M.at(nodeToDel);
+				else if (tempMax < maxDistance) {
+					maxDistance = tempMax;
 					tabuL.clear();
-					Edge pairEdge = { nodeToDel,{ nodeToAdd, maxDistance } };
+					Edge pairEdge = { nodeToDel,{ nodeToAdd, tempMax } };
 					tabuL.push_back(pairEdge);
 				}
 			}
 			++iter;
 		}
-		removeFacility(newPNode);
+		removeFacility(nodeToAdd);
 	}
 
 	/* 从可交换对中返回最好的一对 */
-	if (tabuL.size())
-		if (isAmnesty(tabuL[rand() % tabuL.size()]))
-			return tabuL[rand() % tabuL.size()];
+	if (tabuL.size() && isAmnesty(tabuL[rand() % tabuL.size()]) || L.size() == 0 )
+		return tabuL[rand() % tabuL.size()];
 	else
 		return L[rand() % L.size()];
 }
@@ -309,15 +310,18 @@ Edge MyPCenter::findPair(int tabuIter)
 void MyPCenter::doubleTabuSearch(int optSol, int stopCondition)
 {
 	int doubleIter = 0;	/* 迭代次数 */
+	alphaTabuTable = vector<int>(G.vexNum, 0);
+	betaTabuTable = vector<int>(G.vexNum, 0);
 	int maxServeEdge = maxEdge().userNode.nodeDis;
 	while (maxServeEdge != optSol && doubleIter != stopCondition) {
-		cout << doubleIter << ": " << maxServeEdge << endl;
 		hisOptSol.push_back(maxServeEdge);
 		Edge findPairEdge = findPair(doubleIter);
-		addFacility(findPairEdge.userNode.nodeNo);
-		maxServeEdge = removeFacility(findPairEdge.serverNode);
-		alphaTabuTable[findPairEdge.userNode.nodeNo] = ALPHATABUTENURE;
-		betaTabuTable[findPairEdge.serverNode] = BETATABUTENURE;
+		int nodeToAdd = findPairEdge.userNode.nodeNo;
+		int nodeToDel = findPairEdge.serverNode;
+		addFacility(nodeToAdd);
+		maxServeEdge = removeFacility(nodeToDel);
+		alphaTabuTable[nodeToAdd] = ALPHATABUTENURE;
+		betaTabuTable[nodeToDel] = BETATABUTENURE;
 		doubleIter++;
 	}
 }
@@ -390,19 +394,16 @@ void MyPCenter::printNoDisArr()
 		cout << "[ERROR] NoDisArr.size() != G.vexNum" << endl;
 }
 
-void MyPCenter::printInitSol()
+void MyPCenter::printOptSol()
 {
-	//vector<int>::iterator iter = serverNodeArr.begin();
-	//while (iter != serverNodeArr.end()) {
-	//	cout << *iter << '\t';
-	//	++iter;
-	//}
-	//cout << endl;
-	
-	for (int i = 0; i < serverNodeFlag.size(); i++)
-		if (serverNodeFlag[i])
-			cout << i << '\t';
+	vector<int>::iterator iter = serverNodeArr.begin();
+	while (iter != serverNodeArr.end()) {
+		cout << *iter << '\t';
+		++iter;
+	}
 	cout << endl;
+	Edge maxServerEdge = maxEdge();
+	cout << maxServerEdge.serverNode << "->" << maxServerEdge.userNode.nodeNo << ": " <<maxServerEdge.userNode.nodeDis << endl;
 }
 
 void MyPCenter::printFDTable()

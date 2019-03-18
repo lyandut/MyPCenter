@@ -44,13 +44,15 @@ public:
 	vector<vector<NodeNoDis>> NoDisArr;
 	int pCenterNum;
 	vector<int> serverNodeArr;
-	vector<bool> serverNodeFlag;
+	vector<int> serverNodeFlag;
 	vector<FDTable> F, D;
-	map<int, int> alphaTabuTable;
-	map<int, int> betaTabuTable;
+	vector<int> alphaTabuTable;
+	vector<int> betaTabuTable;
+	vector<int> hisOptSol;
 
 	void readFileToCreateGraph(string fileName);
 	Edge maxEdge();
+	Edge maxEdgeWithoutFD();
 	void initSolution();
 	void createFDTable();
 	void createFDByserverNodeArr(int currNode);
@@ -60,17 +62,16 @@ public:
 	int removeFacility(int);
 	Edge findPair(int tabuIter);
 	void doubleTabuSearch(int optSol, int stopCondition);
-	
-	/* [TODO] */
-	map<Edge, int> singleTabuTable;
-	vector<int> hisOptSol;
-	void singleTabuSearch(int optSol, int stopCondition);
 	bool isAmnesty(Edge feaEdge);
+	
+	/* [TODO] */	
+	map<Edge, int> singleTabuTable;
+	void singleTabuSearch(int optSol, int stopCondition);
 
 	/* print check */
 	void printGraph();
 	void printNoDisArr();
-	void printInitSol();
+	void printOptSol();
 	void printFDTable();
 };
 

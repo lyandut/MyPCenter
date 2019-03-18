@@ -11,13 +11,13 @@ int main() {
 	myPC.readFileToCreateGraph("D:\\Hust\\P-Center\\TabuSearch_For_P-center\\Instance\\pmed1.txt");
 	myPC.initSolution();
 	myPC.createFDTable();
-	myPC.doubleTabuSearch(127, 1000);
+	myPC.doubleTabuSearch(127, 100);
 	
 	//myPC.printGraph();
 	//myPC.printNoDisArr();
-	//myPC.printInitSol();
 	//myPC.printFDTable();
-
+	myPC.printOptSol();
+	
 	system("PAUSE");
 	return 0;
 }
