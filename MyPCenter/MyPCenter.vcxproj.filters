@@ -27,4 +27,126 @@
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\Instance\pmed1.txt">
+      <Filter>资源文件</Filter>
+    </Text>
+    <Text Include="..\Instance\pmed2.txt">
+      <Filter>资源文件</Filter>
+    </Text>
+    <Text Include="..\Instance\pmed3.txt">
+      <Filter>资源文件</Filter>
+    </Text>
+    <Text Include="..\Instance\pmed4.txt">
+      <Filter>资源文件</Filter>
+    </Text>
+    <Text Include="..\Instance\pmed5.txt">
+      <Filter>资源文件</Filter>
+    </Text>
+    <Text Include="..\Instance\pmed6.txt">
+      <Filter>资源文件</Filter>
+    </Text>
+    <Text Include="..\Instance\pmed7.txt">
+      <Filter>资源文件</Filter>
+    </Text>
+    <Text Include="..\Instance\pmed8.txt">
+      <Filter>资源文件</Filter>
+    </Text>
+    <Text Include="..\Instance\pmed9.txt">
+      <Filter>资源文件</Filter>
+    </Text>
+    <Text Include="..\Instance\pmed10.txt">
+      <Filter>资源文件</Filter>
+    </Text>
+    <Text Include="..\Instance\pmed11.txt">
+      <Filter>资源文件</Filter>
+    </Text>
+    <Text Include="..\Instance\pmed12.txt">
+      <Filter>资源文件</Filter>
+    </Text>
+    <Text Include="..\Instance\pmed13.txt">
+      <Filter>资源文件</Filter>
+    </Text>
+    <Text Include="..\Instance\pmed14.txt">
+      <Filter>资源文件</Filter>
+    </Text>
+    <Text Include="..\Instance\pmed15.txt">
+      <Filter>资源文件</Filter>
+    </Text>
+    <Text Include="..\Instance\pmed16.txt">
+      <Filter>资源文件</Filter>
+    </Text>
+    <Text Include="..\Instance\pmed17.txt">
+      <Filter>资源文件</Filter>
+    </Text>
+    <Text Include="..\Instance\pmed18.txt">
+      <Filter>资源文件</Filter>
+    </Text>
+    <Text Include="..\Instance\pmed19.txt">
+      <Filter>资源文件</Filter>
+    </Text>
+    <Text Include="..\Instance\pmed20.txt">
+      <Filter>资源文件</Filter>
+    </Text>
+    <Text Include="..\Instance\pmed21.txt">
+      <Filter>资源文件</Filter>
+    </Text>
+    <Text Include="..\Instance\pmed22.txt">
+      <Filter>资源文件</Filter>
+    </Text>
+    <Text Include="..\Instance\pmed23.txt">
+      <Filter>资源文件</Filter>
+    </Text>
+    <Text Include="..\Instance\pmed24.txt">
+      <Filter>资源文件</Filter>
+    </Text>
+    <Text Include="..\Instance\pmed25.txt">
+      <Filter>资源文件</Filter>
+    </Text>
+    <Text Include="..\Instance\pmed26.txt">
+      <Filter>资源文件</Filter>
+    </Text>
+    <Text Include="..\Instance\pmed27.txt">
+      <Filter>资源文件</Filter>
+    </Text>
+    <Text Include="..\Instance\pmed28.txt">
+      <Filter>资源文件</Filter>
+    </Text>
+    <Text Include="..\Instance\pmed29.txt">
+      <Filter>资源文件</Filter>
+    </Text>
+    <Text Include="..\Instance\pmed30.txt">
+      <Filter>资源文件</Filter>
+    </Text>
+    <Text Include="..\Instance\pmed31.txt">
+      <Filter>资源文件</Filter>
+    </Text>
+    <Text Include="..\Instance\pmed32.txt">
+      <Filter>资源文件</Filter>
+    </Text>
+    <Text Include="..\Instance\pmed33.txt">
+      <Filter>资源文件</Filter>
+    </Text>
+    <Text Include="..\Instance\pmed34.txt">
+      <Filter>资源文件</Filter>
+    </Text>
+    <Text Include="..\Instance\pmed35.txt">
+      <Filter>资源文件</Filter>
+    </Text>
+    <Text Include="..\Instance\pmed36.txt">
+      <Filter>资源文件</Filter>
+    </Text>
+    <Text Include="..\Instance\pmed37.txt">
+      <Filter>资源文件</Filter>
+    </Text>
+    <Text Include="..\Instance\pmed38.txt">
+      <Filter>资源文件</Filter>
+    </Text>
+    <Text Include="..\Instance\pmed39.txt">
+      <Filter>资源文件</Filter>
+    </Text>
+    <Text Include="..\Instance\pmed40.txt">
+      <Filter>资源文件</Filter>
+    </Text>
+  </ItemGroup>
 </Project>

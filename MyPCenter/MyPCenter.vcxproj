@@ -148,6 +148,48 @@
   <ItemGroup>
     <ClInclude Include="MyPCenter.h" />
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\Instance\pmed1.txt" />
+    <Text Include="..\Instance\pmed10.txt" />
+    <Text Include="..\Instance\pmed11.txt" />
+    <Text Include="..\Instance\pmed12.txt" />
+    <Text Include="..\Instance\pmed13.txt" />
+    <Text Include="..\Instance\pmed14.txt" />
+    <Text Include="..\Instance\pmed15.txt" />
+    <Text Include="..\Instance\pmed16.txt" />
+    <Text Include="..\Instance\pmed17.txt" />
+    <Text Include="..\Instance\pmed18.txt" />
+    <Text Include="..\Instance\pmed19.txt" />
+    <Text Include="..\Instance\pmed2.txt" />
+    <Text Include="..\Instance\pmed20.txt" />
+    <Text Include="..\Instance\pmed21.txt" />
+    <Text Include="..\Instance\pmed22.txt" />
+    <Text Include="..\Instance\pmed23.txt" />
+    <Text Include="..\Instance\pmed24.txt" />
+    <Text Include="..\Instance\pmed25.txt" />
+    <Text Include="..\Instance\pmed26.txt" />
+    <Text Include="..\Instance\pmed27.txt" />
+    <Text Include="..\Instance\pmed28.txt" />
+    <Text Include="..\Instance\pmed29.txt" />
+    <Text Include="..\Instance\pmed3.txt" />
+    <Text Include="..\Instance\pmed30.txt" />
+    <Text Include="..\Instance\pmed31.txt" />
+    <Text Include="..\Instance\pmed32.txt" />
+    <Text Include="..\Instance\pmed33.txt" />
+    <Text Include="..\Instance\pmed34.txt" />
+    <Text Include="..\Instance\pmed35.txt" />
+    <Text Include="..\Instance\pmed36.txt" />
+    <Text Include="..\Instance\pmed37.txt" />
+    <Text Include="..\Instance\pmed38.txt" />
+    <Text Include="..\Instance\pmed39.txt" />
+    <Text Include="..\Instance\pmed4.txt" />
+    <Text Include="..\Instance\pmed40.txt" />
+    <Text Include="..\Instance\pmed5.txt" />
+    <Text Include="..\Instance\pmed6.txt" />
+    <Text Include="..\Instance\pmed7.txt" />
+    <Text Include="..\Instance\pmed8.txt" />
+    <Text Include="..\Instance\pmed9.txt" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

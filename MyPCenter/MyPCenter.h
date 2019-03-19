@@ -48,6 +48,7 @@ public:
 	vector<FDTable> F, D;
 	vector<int> alphaTabuTable;
 	vector<int> betaTabuTable;
+	map<Edge, int> singleTabuTable;
 	vector<int> hisOptSol;
 
 	void readFileToCreateGraph(string fileName);
@@ -60,13 +61,11 @@ public:
 	FDTable findCountByNoDisArr(int currNode, int count);
 	int addFacility(int);
 	int removeFacility(int);
-	Edge findPair(int tabuIter);
+	Edge findPairForDouble(int doubleTabuIter);
+	Edge findPairForSingle(int singleTabuIter);
 	void doubleTabuSearch(int optSol, int stopCondition);
-	bool isAmnesty(Edge feaEdge);
-	
-	/* [TODO] */	
-	map<Edge, int> singleTabuTable;
 	void singleTabuSearch(int optSol, int stopCondition);
+	bool isAmnesty(int bestCurrSol);
 
 	/* print check */
 	void printGraph();
