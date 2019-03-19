@@ -25,3 +25,8 @@
 ## 决策
 
 在哪些节点设置中心.
+
+## SDK
+
+ https://github.com/HUST-Smart/NPBenchmark-PCenter
+
